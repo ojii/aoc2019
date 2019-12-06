@@ -1,4 +1,8 @@
-fn calc_fuel(mass: i32) -> i32 {
+fn calc_fuel1(mass: i32) -> i32 {
+    (mass / 3) - 2
+}
+
+fn calc_fuel2(mass: i32) -> i32 {
     let mut total = 0;
     let mut mass = mass;
     loop {
@@ -13,12 +17,15 @@ fn calc_fuel(mass: i32) -> i32 {
 }
 
 pub fn main() {
-    let fuel: i32 = INPUT
+    let (fuel1, fuel2) = INPUT
         .lines()
         .flat_map(|line| line.parse::<i32>().ok())
-        .map(calc_fuel)
-        .sum();
-    println!("{}", fuel);
+        .map(|mass| (calc_fuel1(mass), calc_fuel2(mass)))
+        .fold((0, 0), |(acc1, acc2), (fuel1, fuel2)| {
+            (acc1 + fuel1, acc2 + fuel2)
+        });
+    println!("{}", fuel1);
+    println!("{}", fuel2);
 }
 
 const INPUT: &'static str = "110321

@@ -75,7 +75,6 @@ fn make_points(wire: Wire) -> Points {
 }
 
 pub fn main() {
-    // 163674 too low
     let first = make_points(parse_wire(INPUT[0]));
     let second = make_points(parse_wire(INPUT[1]));
 
@@ -83,6 +82,15 @@ pub fn main() {
     let second_coords: HashSet<Coords> = second.keys().cloned().collect();
 
     let candidates: HashSet<&Coords> = first_coords.intersection(&second_coords).collect();
+
+    println!(
+        "{}",
+        candidates
+            .iter()
+            .map(|&(x, y)| x.abs() + y.abs())
+            .min()
+            .unwrap()
+    );
 
     let winner = candidates
         .iter()
