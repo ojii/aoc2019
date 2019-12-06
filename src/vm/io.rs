@@ -1,3 +1,5 @@
+#[allow(dead_code)]
+
 pub enum IOResult<T> {
     Ok(T),
     Error(String),
@@ -28,7 +30,7 @@ impl Input for StaticInput {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct VecOutput {
     data: Vec<i64>,
 }
@@ -50,7 +52,7 @@ impl Output for VecOutput {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct NullIO {}
 
 impl NullIO {
@@ -66,7 +68,7 @@ impl Input for NullIO {
 }
 
 impl Output for NullIO {
-    fn write(&mut self, value: i64) -> IOResult<()> {
+    fn write(&mut self, _value: i64) -> IOResult<()> {
         IOResult::Error("Cannot write to null io".to_string())
     }
 }

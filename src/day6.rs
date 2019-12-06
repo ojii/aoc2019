@@ -58,10 +58,10 @@ impl Object {
 fn build_universe(from: &str) -> Object {
     let mut named = HashMap::new();
     for line in from.lines() {
-        let mut parts = line.split(")");
+        let mut parts = line.split(')');
         let parent = parts.next().unwrap().to_string();
         let child = parts.next().unwrap().to_string();
-        named.entry(parent).or_insert(Vec::new()).push(child);
+        named.entry(parent).or_insert_with(Vec::new).push(child);
     }
     Object::new("COM".to_string(), &named)
 }
@@ -75,7 +75,7 @@ pub fn main() {
     );
 }
 
-const INPUT: &'static str = "3TK)7K5
+const INPUT: &str = "3TK)7K5
 M33)KHG
 SRG)PM6
 9J7)D3N

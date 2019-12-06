@@ -27,7 +27,7 @@ fn main() {
         .map(|index| index.checked_sub(1))
         .flatten()
         .map(|index| DAYS.get(index))
-        .unwrap_or(DAYS.last())
+        .unwrap_or_else(|| DAYS.last())
         .unwrap();
     day();
 }

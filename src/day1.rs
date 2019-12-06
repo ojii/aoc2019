@@ -28,7 +28,7 @@ pub fn main() {
     println!("{}", fuel2);
 }
 
-const INPUT: &'static str = "110321
+const INPUT: &str = "110321
 61817
 107271
 126609
