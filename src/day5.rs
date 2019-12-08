@@ -4,21 +4,14 @@ pub fn main() {
     let memory = vm::parse_program(INPUT);
     println!(
         "{}",
-        vm::VM::new(
-            memory.clone(),
-            vm::StaticInput::new(1),
-            vm::VecOutput::new(),
-        )
-        .run()
-        .last()
-        .unwrap()
-    );
-    println!(
-        "{}",
-        vm::VM::new(memory, vm::StaticInput::new(5), vm::VecOutput::new(),)
+        vm::VM::new(memory.clone(), 1, Vec::new())
             .run()
             .last()
             .unwrap()
+    );
+    println!(
+        "{}",
+        vm::VM::new(memory, 5, Vec::new()).run().last().unwrap()
     );
 }
 

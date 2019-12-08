@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 #[allow(dead_code)]
 
 pub enum IOResult<T> {
@@ -13,41 +15,30 @@ pub trait Output: Clone {
     fn write(&mut self, value: i64) -> IOResult<()>;
 }
 
-#[derive(Clone)]
-pub struct StaticInput {
-    value: i64,
-}
-
-impl StaticInput {
-    pub fn new(value: i64) -> StaticInput {
-        StaticInput { value }
-    }
-}
-
-impl Input for StaticInput {
+impl Input for i64 {
     fn read(&mut self) -> IOResult<i64> {
-        IOResult::Ok(self.value)
+        IOResult::Ok(*self)
     }
 }
 
-#[derive(Clone, Default)]
-pub struct VecOutput {
-    data: Vec<i64>,
-}
-
-impl VecOutput {
-    pub fn new() -> VecOutput {
-        VecOutput { data: Vec::new() }
-    }
-
-    pub fn last(&self) -> Option<&i64> {
-        self.data.last()
-    }
-}
-
-impl Output for VecOutput {
+impl Output for i64 {
     fn write(&mut self, value: i64) -> IOResult<()> {
-        self.data.push(value);
+        *self = value;
+        IOResult::Ok(())
+    }
+}
+
+impl Input for VecDeque<i64> {
+    fn read(&mut self) -> IOResult<i64> {
+        self.pop_front()
+            .map(|value| IOResult::Ok(value))
+            .unwrap_or_else(|| IOResult::Error("Input empty".to_string()))
+    }
+}
+
+impl Output for Vec<i64> {
+    fn write(&mut self, value: i64) -> IOResult<()> {
+        self.push(value);
         IOResult::Ok(())
     }
 }
