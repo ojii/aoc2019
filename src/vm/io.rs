@@ -2,7 +2,6 @@ use std::collections::VecDeque;
 use std::sync::mpsc::{Receiver, Sender};
 
 #[allow(dead_code)]
-
 pub type IOResult<T> = Result<T, String>;
 
 pub trait Input {
@@ -29,7 +28,7 @@ impl Output for i64 {
 impl Input for VecDeque<i64> {
     fn read(&mut self) -> IOResult<i64> {
         self.pop_front()
-            .map(|value| Ok(value))
+            .map(Ok)
             .unwrap_or_else(|| Err("Input empty".to_string()))
     }
 }
@@ -41,6 +40,7 @@ impl Output for Vec<i64> {
     }
 }
 
+#[derive(Default)]
 pub struct NullIO {}
 
 impl NullIO {
@@ -63,9 +63,7 @@ impl Output for NullIO {
 
 impl Input for Receiver<i64> {
     fn read(&mut self) -> IOResult<i64> {
-        self.recv()
-            .map(|value| Ok(value))
-            .unwrap_or_else(|e| Err(e.to_string()))
+        self.recv().map(Ok).unwrap_or_else(|e| Err(e.to_string()))
     }
 }
 
@@ -76,14 +74,26 @@ impl Output for Sender<i64> {
     }
 }
 
-struct PeekingOutput<O: Output> {
-    inner: O,
-    last: Option<i64>,
+pub struct SendOrStore {
+    sender: Sender<i64>,
+    pub store: Vec<i64>,
 }
 
-impl<O: Output> Output for PeekingOutput<O> {
+impl SendOrStore {
+    pub fn new(sender: Sender<i64>) -> Self {
+        Self {
+            sender,
+            store: Vec::new(),
+        }
+    }
+}
+
+impl Output for SendOrStore {
     fn write(&mut self, value: i64) -> Result<(), String> {
-        self.last = Some(value);
-        self.inner.write(value)
+        match self.sender.send(value) {
+            Err(_) => self.store.push(value),
+            Ok(_) => (),
+        };
+        Ok(())
     }
 }
