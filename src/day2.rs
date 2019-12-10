@@ -1,9 +1,9 @@
 use rayon::prelude::*;
 
-use crate::vm::{parse_program, run, NullIO};
+use crate::vm::{run, Memory, NullIO};
 
 pub fn main() {
-    let memory = parse_program(INPUT);
+    let memory = Memory::from(INPUT);
 
     let mut first = memory.clone();
     first[1] = 12;

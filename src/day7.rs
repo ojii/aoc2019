@@ -4,10 +4,10 @@ use std::sync::mpsc::channel;
 use itertools::Itertools;
 use threadpool::ThreadPool;
 
-use crate::vm::{parse_program, run, SendOrStore};
+use crate::vm::{run, Memory, SendOrStore};
 
 pub fn main() {
-    let memory = parse_program(INPUT);
+    let memory = Memory::from(INPUT);
     println!(
         "{}",
         (0..=4i64)

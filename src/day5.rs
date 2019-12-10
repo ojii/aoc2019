@@ -1,7 +1,7 @@
-use crate::vm::{parse_program, run};
+use crate::vm::{run, Memory};
 
 pub fn main() {
-    let memory = parse_program(INPUT);
+    let memory = Memory::from(INPUT);
     println!("{}", run(memory.clone(), 1, Vec::new()).1.last().unwrap());
     println!("{}", run(memory, 5, Vec::new()).1.last().unwrap());
 }

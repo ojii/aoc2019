@@ -90,9 +90,8 @@ impl SendOrStore {
 
 impl Output for SendOrStore {
     fn write(&mut self, value: i64) -> Result<(), String> {
-        match self.sender.send(value) {
-            Err(_) => self.store.push(value),
-            Ok(_) => (),
+        if self.sender.send(value).is_err() {
+            self.store.push(value);
         };
         Ok(())
     }

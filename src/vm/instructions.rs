@@ -18,6 +18,7 @@ impl Instruction {
 pub enum Param {
     Positional(usize, i64),
     Immediate(i64),
+    Relative(usize, i64),
 }
 
 impl Param {
@@ -25,13 +26,15 @@ impl Param {
         match self {
             Param::Positional(position, _) => *position,
             Param::Immediate(_) => panic!("immediate values have no position"),
+            Param::Relative(position, _) => *position,
         }
     }
 
     fn value(&self) -> i64 {
         match self {
             Param::Positional(_, value) => *value,
-            Param::Immediate(val) => *val,
+            Param::Immediate(value) => *value,
+            Param::Relative(_, value) => *value,
         }
     }
 }
@@ -97,6 +100,10 @@ fn eq(params: Parameters) -> InstructionAction {
     )
 }
 
+fn rel(params: Parameters) -> InstructionAction {
+    InstructionAction::ChangeRelativeBase(params[0].value())
+}
+
 fn halt(_params: Parameters) -> InstructionAction {
     InstructionAction::Halt
 }
@@ -106,6 +113,7 @@ pub enum InstructionAction {
     Read(usize),
     Write(i64),
     Jump(usize),
+    ChangeRelativeBase(i64),
     Noop,
     Halt,
 }
@@ -120,6 +128,7 @@ pub fn get_instruction(opcode: i64) -> Instruction {
         6 => Instruction::new(2, jz),
         7 => Instruction::new(3, lt),
         8 => Instruction::new(3, eq),
+        9 => Instruction::new(1, rel),
         99 => Instruction::new(0, halt),
         n => panic!("Unsupported opcode {} ({})", n, opcode),
     }
