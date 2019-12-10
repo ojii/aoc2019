@@ -1,116 +1,126 @@
-use crate::vm::*;
+pub type Parameters = Vec<Param>;
+type Handler = fn(Parameters) -> InstructionAction;
 
-fn math<I: Input, O: Output>(
-    vm: &mut VM<I, O>,
-    params: Vec<Value>,
-    op: fn(i64, i64) -> i64,
-) -> InstructionResult {
-    let a = params[0].resolve(vm);
-    let b = params[1].resolve(vm);
-    match params[2] {
-        Value::Positional(index) => {
-            vm.store(index, op(a, b));
-            InstructionResult::Continue
-        }
-        Value::Immediate(_) => {
-            InstructionResult::Error("Cannot write to immediate value".to_string())
+pub struct Instruction {
+    pub num_params: usize,
+    pub handler: Handler,
+}
+
+impl Instruction {
+    fn new(num_params: usize, handler: Handler) -> Self {
+        Self {
+            num_params,
+            handler,
         }
     }
 }
 
-fn add<I: Input, O: Output>(vm: &mut VM<I, O>, params: Vec<Value>) -> InstructionResult {
-    math(vm, params, |a, b| a + b)
+pub enum Param {
+    Positional(usize, i64),
+    Immediate(i64),
 }
 
-fn mul<I: Input, O: Output>(vm: &mut VM<I, O>, params: Vec<Value>) -> InstructionResult {
-    math(vm, params, |a, b| a * b)
+impl Param {
+    fn position(&self) -> usize {
+        match self {
+            Param::Positional(position, _) => *position,
+            Param::Immediate(_) => panic!("immediate values have no position"),
+        }
+    }
+
+    fn value(&self) -> i64 {
+        match self {
+            Param::Positional(_, value) => *value,
+            Param::Immediate(val) => *val,
+        }
+    }
 }
 
-fn read<I: Input, O: Output>(vm: &mut VM<I, O>, params: Vec<Value>) -> InstructionResult {
-    match vm.read() {
-        IOResult::Ok(value) => match params[0] {
-            Value::Positional(index) => {
-                vm.store(index, value);
-                InstructionResult::Continue
-            }
-            Value::Immediate(_) => {
-                InstructionResult::Error("Cannot write to immediate value".to_string())
-            }
+fn math(params: Parameters, op: fn(i64, i64) -> i64) -> InstructionAction {
+    InstructionAction::Store(
+        params[2].position(),
+        op(params[0].value(), params[1].value()),
+    )
+}
+
+fn add(params: Parameters) -> InstructionAction {
+    math(params, |a, b| a + b)
+}
+
+fn mul(params: Parameters) -> InstructionAction {
+    math(params, |a, b| a * b)
+}
+
+fn read(params: Parameters) -> InstructionAction {
+    InstructionAction::Read(params[0].position())
+}
+
+fn write(params: Parameters) -> InstructionAction {
+    InstructionAction::Write(params[0].value())
+}
+
+fn jnz(params: Parameters) -> InstructionAction {
+    if params[0].value() != 0 {
+        InstructionAction::Jump(params[1].value() as usize)
+    } else {
+        InstructionAction::Noop
+    }
+}
+
+fn jz(params: Parameters) -> InstructionAction {
+    if params[0].value() == 0 {
+        InstructionAction::Jump(params[1].value() as usize)
+    } else {
+        InstructionAction::Noop
+    }
+}
+
+fn lt(params: Parameters) -> InstructionAction {
+    InstructionAction::Store(
+        params[2].position(),
+        if params[0].value() < params[1].value() {
+            1
+        } else {
+            0
         },
-        IOResult::Error(reason) => InstructionResult::Error(reason),
+    )
+}
+
+fn eq(params: Parameters) -> InstructionAction {
+    InstructionAction::Store(
+        params[2].position(),
+        if params[0].value() == params[1].value() {
+            1
+        } else {
+            0
+        },
+    )
+}
+
+fn halt(_params: Parameters) -> InstructionAction {
+    InstructionAction::Halt
+}
+
+pub enum InstructionAction {
+    Store(usize, i64),
+    Read(usize),
+    Write(i64),
+    Jump(usize),
+    Noop,
+    Halt,
+}
+
+pub fn get_instruction(opcode: i64) -> Instruction {
+    match opcode % 100 {
+        1 => Instruction::new(3, add),
+        2 => Instruction::new(3, mul),
+        3 => Instruction::new(1, read),
+        4 => Instruction::new(1, write),
+        5 => Instruction::new(2, jnz),
+        6 => Instruction::new(2, jz),
+        7 => Instruction::new(3, lt),
+        8 => Instruction::new(3, eq),
+        99 => Instruction::new(0, halt),
+        n => panic!("Unsupported opcode {} ({})", n, opcode),
     }
-}
-
-fn write<I: Input, O: Output>(vm: &mut VM<I, O>, params: Vec<Value>) -> InstructionResult {
-    let value = params[0].resolve(vm);
-    match vm.write(value) {
-        IOResult::Ok(_) => InstructionResult::Continue,
-        IOResult::Error(reason) => InstructionResult::Error(reason),
-    }
-}
-
-fn jnz<I: Input, O: Output>(vm: &mut VM<I, O>, params: Vec<Value>) -> InstructionResult {
-    if params[0].resolve(vm) != 0 {
-        vm.pc = params[1].resolve(vm) as usize;
-    }
-    InstructionResult::Continue
-}
-
-fn jz<I: Input, O: Output>(vm: &mut VM<I, O>, params: Vec<Value>) -> InstructionResult {
-    if params[0].resolve(vm) == 0 {
-        vm.pc = params[1].resolve(vm) as usize;
-    }
-    InstructionResult::Continue
-}
-
-fn lt<I: Input, O: Output>(vm: &mut VM<I, O>, params: Vec<Value>) -> InstructionResult {
-    let result = if params[0].resolve(vm) < params[1].resolve(vm) {
-        1
-    } else {
-        0
-    };
-    match params[2] {
-        Value::Positional(index) => {
-            vm.store(index, result);
-            InstructionResult::Continue
-        }
-        Value::Immediate(_) => {
-            InstructionResult::Error("Cannot write to immediate value".to_string())
-        }
-    }
-}
-
-fn eq<I: Input, O: Output>(vm: &mut VM<I, O>, params: Vec<Value>) -> InstructionResult {
-    let result = if params[0].resolve(vm) == params[1].resolve(vm) {
-        1
-    } else {
-        0
-    };
-    match params[2] {
-        Value::Positional(index) => {
-            vm.store(index, result);
-            InstructionResult::Continue
-        }
-        Value::Immediate(_) => {
-            InstructionResult::Error("Cannot write to immediate value".to_string())
-        }
-    }
-}
-
-fn halt<I: Input, O: Output>(_vm: &mut VM<I, O>, _params: Vec<Value>) -> InstructionResult {
-    InstructionResult::Halt
-}
-
-pub fn get_default<I: Input, O: Output>() -> Vec<Instruction<I, O>> {
-    vec![
-        Instruction::new(1, 3, add),
-        Instruction::new(2, 3, mul),
-        Instruction::new(3, 1, read),
-        Instruction::new(4, 1, write),
-        Instruction::new(5, 2, jnz),
-        Instruction::new(6, 2, jz),
-        Instruction::new(7, 3, lt),
-        Instruction::new(8, 3, eq),
-        Instruction::new(99, 0, halt),
-    ]
 }

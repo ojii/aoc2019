@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate itertools;
 extern crate rayon;
+extern crate threadpool;
 
 mod day1;
 mod day2;
