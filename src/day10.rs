@@ -1,3 +1,6 @@
+use itertools::Itertools;
+use std::collections::VecDeque;
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 struct Asteroid {
     x: i32,
@@ -35,6 +38,19 @@ impl Asteroid {
         };
         (start <= us && us <= end) || (end <= us && us <= start)
     }
+
+    fn distance(&self, to: &Asteroid) -> f64 {
+        (((self.x - to.x).pow(2) + (self.y - to.y).pow(2)) as f64).sqrt()
+    }
+
+    fn angle(&self, to: &Asteroid) -> f64 {
+        let zero = Asteroid {
+            x: self.x,
+            y: self.y - 1,
+        };
+        ((to.y - self.y) as f64).atan2((to.x - self.x) as f64)
+            - ((zero.y - self.y) as f64).atan2((zero.x - self.x) as f64)
+    }
 }
 
 fn parse(from: &str) -> Vec<Asteroid> {
@@ -59,17 +75,51 @@ fn parse(from: &str) -> Vec<Asteroid> {
         .collect()
 }
 
+fn shooting_order(from: &Asteroid, universe: &[Asteroid]) -> Vec<Asteroid> {
+    let mut pool = Vec::from(universe)
+        .iter()
+        .filter(|&p| p != from)
+        .cloned()
+        .collect::<Vec<Asteroid>>();
+    let mut colinears: Vec<VecDeque<Asteroid>> = Vec::new();
+    while let Some(asteroid) = pool.pop() {
+        let mut current = VecDeque::new();
+        current.push_front(asteroid.clone());
+        current.extend(pool.drain_filter(|other| from.collinear(&asteroid, &other)));
+        colinears.push(
+            current
+                .iter()
+                .sorted_by(|&a, &b| from.distance(a).partial_cmp(&from.distance(b)).unwrap())
+                .cloned()
+                .collect(),
+        );
+    }
+
+    colinears.sort_by(|a, b| from.angle(&a[0]).partial_cmp(&from.angle(&b[0])).unwrap());
+
+    let mut order = Vec::with_capacity(universe.len() - 1);
+
+    while colinears.iter().any(|v| !v.is_empty()) {
+        for asteroids in &mut colinears {
+            if let Some(asteroid) = asteroids.pop_front() {
+                order.push(asteroid);
+            }
+        }
+    }
+    order.to_vec()
+}
+
 pub fn main() {
     let asteroids = parse(INPUT);
-    println!(
-        "{}",
-        asteroids
-            .iter()
-            .map(|asteroid| asteroid.calculate_visible(&asteroids))
-            .max()
-            .unwrap_or(0)
-    );
-    let WINNER = Asteroid { x: 11, y: 13 };
+    let (winner, visible) = asteroids
+        .iter()
+        .map(|asteroid| (asteroid, asteroid.calculate_visible(&asteroids)))
+        .max_by(|(_, a), (_, b)| a.cmp(b))
+        .unwrap();
+    println!("{} (at {:?})", visible, winner);
+    let order = shooting_order(&winner, &asteroids);
+    let two_hundredth = &order[199];
+    println!("{}", (two_hundredth.x * 100) + two_hundredth.y);
 }
 
 const INPUT: &str = "....#...####.#.#...........#........
