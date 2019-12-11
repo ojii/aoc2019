@@ -118,6 +118,7 @@ pub fn main() {
         .unwrap();
     println!("{} (at {:?})", visible, winner);
     let order = shooting_order(&winner, &asteroids);
+    // 2203 is too high
     let two_hundredth = &order[199];
     println!("{}", (two_hundredth.x * 100) + two_hundredth.y);
 }

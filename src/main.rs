@@ -7,6 +7,7 @@ extern crate threadpool;
 
 mod day1;
 mod day10;
+mod day11;
 mod day2;
 mod day3;
 mod day4;
@@ -17,7 +18,7 @@ mod day8;
 mod day9;
 pub mod vm;
 
-const DAYS: [fn(); 10] = [
+const DAYS: [fn(); 11] = [
     day1::main,
     day2::main,
     day3::main,
@@ -28,6 +29,7 @@ const DAYS: [fn(); 10] = [
     day8::main,
     day9::main,
     day10::main,
+    day11::main,
 ];
 
 fn main() {

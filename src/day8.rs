@@ -32,8 +32,8 @@ impl Pixel {
 impl Display for Pixel {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         match self {
-            Pixel::Black => write!(f, "▮"),
-            Pixel::White => write!(f, "▯"),
+            Pixel::Black => write!(f, "."),
+            Pixel::White => write!(f, "#"),
             Pixel::Transparent => write!(f, " "),
         }
     }
