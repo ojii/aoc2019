@@ -1,5 +1,6 @@
-use itertools::Itertools;
 use std::fmt::{Display, Error, Formatter};
+
+use itertools::{join, Itertools};
 
 type Layer = Vec<Pixel>;
 
@@ -23,18 +24,16 @@ impl Pixel {
     fn merge(&self, other: &Pixel) -> Pixel {
         match (self, other) {
             (Pixel::Black, _) => Pixel::Black,
-            (Pixel::White, _) => Pixel::Black,
+            (Pixel::White, _) => Pixel::White,
             (Pixel::Transparent, x) => x.clone(),
         }
     }
-}
 
-impl Display for Pixel {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+    fn render(&self) -> String {
         match self {
-            Pixel::Black => write!(f, "."),
-            Pixel::White => write!(f, "#"),
-            Pixel::Transparent => write!(f, " "),
+            Pixel::Black => ".".to_string(),
+            Pixel::White => "#".to_string(),
+            Pixel::Transparent => " ".to_string(),
         }
     }
 }
@@ -71,17 +70,21 @@ impl Image {
         Image::new(layers, width, height)
     }
 
-    fn rasterize(&self) -> Vec<Vec<Pixel>> {
-        let flat_layer = self.layers.iter().fold(
-            vec![Pixel::Transparent; self.width * self.height],
-            |acc, layer| acc.iter().zip(layer).map(|(a, b)| a.merge(b)).collect(),
-        );
-        let mut lines = Vec::with_capacity(self.height);
-        for row in 0..self.height {
-            let line = Vec::from(&flat_layer[row * self.width..(row + 1) * self.width]);
-            lines.push(line);
+    fn rasterize(&self) -> String {
+        let mut combined = vec![Pixel::Transparent; self.width * self.height];
+
+        for layer in &self.layers {
+            combined = combined
+                .iter()
+                .zip(layer)
+                .map(|(combined, layer)| combined.merge(layer))
+                .collect();
         }
-        lines
+        let mut lines = Vec::with_capacity(self.height);
+        for chunk in combined.chunks(self.width) {
+            lines.push(chunk.iter().map(|pixel| pixel.render()).join(""))
+        }
+        lines.join("\n")
     }
 }
 
@@ -100,10 +103,7 @@ pub fn main() {
                 * layer.iter().filter(|&x| *x == Pixel::Transparent).count())
             .unwrap()
     );
-    let raster = image.rasterize();
-    for line in raster {
-        println!("{}", line.iter().join(""));
-    }
+    println!("{}", image.rasterize());
 }
 
 const WIDTH: usize = 25;
