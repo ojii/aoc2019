@@ -1,6 +1,4 @@
-use std::fmt::{Display, Error, Formatter};
-
-use itertools::{join, Itertools};
+use itertools::Itertools;
 
 type Layer = Vec<Pixel>;
 

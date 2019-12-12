@@ -19,7 +19,7 @@ enum Color {
 }
 
 impl Color {
-    fn render(&self) -> String {
+    fn render(self) -> String {
         match self {
             Color::Black => ".".to_string(),
             Color::White => "#".to_string(),
@@ -48,7 +48,7 @@ enum Direction {
 }
 
 impl Direction {
-    fn turn_left(&self) -> Direction {
+    fn turn_left(self) -> Direction {
         match self {
             Direction::Up => Direction::Left,
             Direction::Left => Direction::Down,
@@ -57,7 +57,7 @@ impl Direction {
         }
     }
 
-    fn turn_right(&self) -> Direction {
+    fn turn_right(self) -> Direction {
         match self {
             Direction::Up => Direction::Right,
             Direction::Right => Direction::Down,
@@ -66,7 +66,7 @@ impl Direction {
         }
     }
 
-    fn advance(&self, position: Coordinate) -> Coordinate {
+    fn advance(self, position: Coordinate) -> Coordinate {
         match self {
             Direction::Up => Coordinate {
                 x: position.x,

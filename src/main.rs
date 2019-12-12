@@ -3,11 +3,13 @@
 #[macro_use]
 extern crate itertools;
 extern crate rayon;
+extern crate regex;
 extern crate threadpool;
 
 mod day1;
 mod day10;
 mod day11;
+mod day12;
 mod day2;
 mod day3;
 mod day4;
@@ -18,7 +20,7 @@ mod day8;
 mod day9;
 pub mod vm;
 
-const DAYS: [fn(); 11] = [
+const DAYS: [fn(); 12] = [
     day1::main,
     day2::main,
     day3::main,
@@ -30,6 +32,7 @@ const DAYS: [fn(); 11] = [
     day9::main,
     day10::main,
     day11::main,
+    day12::main,
 ];
 
 fn main() {
