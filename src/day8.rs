@@ -1,3 +1,4 @@
+use crate::render::render;
 use itertools::Itertools;
 
 type Layer = Vec<Pixel>;
@@ -27,11 +28,11 @@ impl Pixel {
         }
     }
 
-    fn render(&self) -> String {
+    fn render(&self) -> char {
         match self {
-            Pixel::Black => ".".to_string(),
-            Pixel::White => "#".to_string(),
-            Pixel::Transparent => " ".to_string(),
+            Pixel::Black => '.',
+            Pixel::White => '#',
+            Pixel::Transparent => ' ',
         }
     }
 }
@@ -68,7 +69,7 @@ impl Image {
         Image::new(layers, width, height)
     }
 
-    fn rasterize(&self) -> String {
+    fn flatten(&self) -> Vec<Pixel> {
         let mut combined = vec![Pixel::Transparent; self.width * self.height];
 
         for layer in &self.layers {
@@ -78,11 +79,14 @@ impl Image {
                 .map(|(combined, layer)| combined.merge(layer))
                 .collect();
         }
-        let mut lines = Vec::with_capacity(self.height);
-        for chunk in combined.chunks(self.width) {
-            lines.push(chunk.iter().map(|pixel| pixel.render()).join(""))
-        }
-        lines.join("\n")
+
+        combined
+    }
+
+    fn translate(&self, index: usize) -> (i64, i64) {
+        let y = index / self.width;
+        let x = index % self.width;
+        (x as i64, y as i64)
     }
 }
 
@@ -101,7 +105,17 @@ pub fn main() {
                 * layer.iter().filter(|&x| *x == Pixel::Transparent).count())
             .unwrap()
     );
-    println!("{}", image.rasterize());
+    println!(
+        "{}",
+        render(
+            image
+                .flatten()
+                .iter()
+                .enumerate()
+                .map(|(index, pixel)| (image.translate(index), pixel.render())),
+            ' '
+        )
+    );
 }
 
 const WIDTH: usize = 25;

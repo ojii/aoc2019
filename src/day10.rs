@@ -1,7 +1,9 @@
+use crate::render::render;
 use itertools::Itertools;
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
+use std::f64::consts::TAU;
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 struct Asteroid {
     x: i32,
     y: i32,
@@ -48,8 +50,13 @@ impl Asteroid {
             x: self.x,
             y: self.y - 1,
         };
-        ((to.y - self.y) as f64).atan2((to.x - self.x) as f64)
-            - ((zero.y - self.y) as f64).atan2((zero.x - self.x) as f64)
+        let angl = ((to.y - self.y) as f64).atan2((to.x - self.x) as f64)
+            - ((zero.y - self.y) as f64).atan2((zero.x - self.x) as f64);
+        if angl < 0.0 {
+            TAU + angl
+        } else {
+            angl
+        }
     }
 }
 
@@ -118,10 +125,42 @@ pub fn main() {
         .unwrap();
     println!("{} (at {:?})", visible, winner);
     let order = shooting_order(&winner, &asteroids);
-    // 2203 is too high
+    //
+    //    let mut space = HashMap::with_capacity(asteroids.len());
+    //    for asteroid in &asteroids {
+    //        space.insert(asteroid, '#');
+    //    }
+    //    space.insert(winner, 'X');
+    //    for index in 0..9 {
+    //        space.insert(
+    //            &order[index],
+    //            (index + 1).to_string().chars().next().unwrap(),
+    //        );
+    //    }
+    //
+    //    println!(
+    //        "{}",
+    //        render(
+    //            space.iter().map(|(k, &v)| ((k.x as i64, k.y as i64), v)),
+    //            '.'
+    //        )
+    //    );
+
+    println!("{}", winner.angle(&Asteroid { x: 1, y: 0 }));
+
     let two_hundredth = &order[199];
-    println!("{}", (two_hundredth.x * 100) + two_hundredth.y);
+    println!(
+        "{} ({:?})",
+        (two_hundredth.x * 100) + two_hundredth.y,
+        two_hundredth
+    );
 }
+
+const _INPUT: &str = ".#....#####...#..
+##...##.#####..##
+##...#...#.#####.
+..#.....#...###..
+..#.#.....#....##";
 
 const INPUT: &str = "....#...####.#.#...........#........
 #####..#.#.#......#####...#.#...#...

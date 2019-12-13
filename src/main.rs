@@ -1,4 +1,5 @@
 #![feature(drain_filter)]
+#![feature(tau_constant)]
 
 #[macro_use]
 extern crate itertools;
@@ -18,6 +19,7 @@ mod day6;
 mod day7;
 mod day8;
 mod day9;
+pub mod render;
 pub mod vm;
 
 const DAYS: [fn(); 12] = [
