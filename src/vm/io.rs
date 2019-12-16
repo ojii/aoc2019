@@ -107,9 +107,7 @@ impl Output for NullIO {
         Err("Cannot write to null io".to_string())
     }
 
-    fn output(self) -> () {
-        ()
-    }
+    fn output(self) {}
 }
 
 impl Input for Receiver<i64> {
@@ -125,9 +123,7 @@ impl Output for Sender<i64> {
         Ok(())
     }
 
-    fn output(self) -> () {
-        ()
-    }
+    fn output(self) {}
 }
 
 pub struct SendOrStore {

@@ -137,11 +137,8 @@ pub fn main() {
         space.insert(asteroid, '#');
     }
     space.insert(winner, 'X');
-    for index in 0..9 {
-        space.insert(
-            &order[index],
-            (index + 1).to_string().chars().next().unwrap(),
-        );
+    for (index, asteroid) in order.iter().take(9).enumerate() {
+        space.insert(asteroid, (index + 1).to_string().chars().next().unwrap());
     }
 
     println!(
@@ -158,11 +155,8 @@ pub fn main() {
         space.insert(asteroid, '#');
     }
     space.insert(winner, 'X');
-    for index in 9..18 {
-        space.insert(
-            &order[index],
-            (index - 8).to_string().chars().next().unwrap(),
-        );
+    for (index, asteroid) in order.iter().skip(9).take(9).enumerate() {
+        space.insert(asteroid, (index + 1).to_string().chars().next().unwrap());
     }
     println!(
         "{}",
