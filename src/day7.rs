@@ -4,7 +4,7 @@ use std::sync::mpsc::channel;
 use itertools::Itertools;
 use threadpool::ThreadPool;
 
-use crate::vm::{run, Memory, SendOrStore};
+use crate::vm::{run, InputOutput, Memory, SendOrStore};
 
 pub fn main() {
     let memory = Memory::from(INPUT);
@@ -15,7 +15,11 @@ pub fn main() {
             .map(|amps| {
                 let mut output = 0i64;
                 for &amp in amps.iter() {
-                    output = run(memory.clone(), VecDeque::from(vec![amp, output]), 0i64).1;
+                    output = run(
+                        memory.clone(),
+                        InputOutput::new(VecDeque::from(vec![amp, output]), 0i64),
+                    )
+                    .1;
                 }
                 output
             })
@@ -45,20 +49,20 @@ pub fn main() {
         let dmem = memory.clone();
         let emem = memory.clone();
         pool.execute(move || {
-            run(amem, ain, aout);
+            run(amem, InputOutput::new(ain, aout));
         });
         pool.execute(move || {
-            run(bmem, bin, bout);
+            run(bmem, InputOutput::new(bin, bout));
         });
         pool.execute(move || {
-            run(cmem, cin, cout);
+            run(cmem, InputOutput::new(cin, cout));
         });
         pool.execute(move || {
-            run(dmem, din, dout);
+            run(dmem, InputOutput::new(din, dout));
         });
         pool.execute(move || {
-            let (_, out) = run(emem, ein, eout);
-            signalout.send(*out.store.last().unwrap()).unwrap();
+            let (_, out) = run(emem, InputOutput::new(ein, eout));
+            signalout.send(*out.last().unwrap()).unwrap();
         });
         pool.join();
         let candidate = signalin.recv().unwrap();

@@ -117,52 +117,76 @@ fn shooting_order(from: &Asteroid, universe: &[Asteroid]) -> Vec<Asteroid> {
 }
 
 pub fn main() {
-    let asteroids = parse(INPUT);
+    let asteroids = parse(FULL_INPUT);
     let (winner, visible) = asteroids
         .iter()
         .map(|asteroid| (asteroid, asteroid.calculate_visible(&asteroids)))
         .max_by(|(_, a), (_, b)| a.cmp(b))
         .unwrap();
     println!("{} (at {:?})", visible, winner);
+    let asteroids = parse(EXAMPLE_INPUT);
+    let (winner, _) = asteroids
+        .iter()
+        .map(|asteroid| (asteroid, asteroid.calculate_visible(&asteroids)))
+        .max_by(|(_, a), (_, b)| a.cmp(b))
+        .unwrap();
     let order = shooting_order(&winner, &asteroids);
-    //
-    //    let mut space = HashMap::with_capacity(asteroids.len());
-    //    for asteroid in &asteroids {
-    //        space.insert(asteroid, '#');
-    //    }
-    //    space.insert(winner, 'X');
-    //    for index in 0..9 {
-    //        space.insert(
-    //            &order[index],
-    //            (index + 1).to_string().chars().next().unwrap(),
-    //        );
-    //    }
-    //
-    //    println!(
-    //        "{}",
-    //        render(
-    //            space.iter().map(|(k, &v)| ((k.x as i64, k.y as i64), v)),
-    //            '.'
-    //        )
-    //    );
 
-    println!("{}", winner.angle(&Asteroid { x: 1, y: 0 }));
+    let mut space = HashMap::with_capacity(asteroids.len());
+    for asteroid in &asteroids {
+        space.insert(asteroid, '#');
+    }
+    space.insert(winner, 'X');
+    for index in 0..9 {
+        space.insert(
+            &order[index],
+            (index + 1).to_string().chars().next().unwrap(),
+        );
+    }
 
-    let two_hundredth = &order[199];
     println!(
-        "{} ({:?})",
-        (two_hundredth.x * 100) + two_hundredth.y,
-        two_hundredth
+        "{}",
+        render(
+            space.iter().map(|(k, &v)| ((k.x as i64, k.y as i64), v)),
+            '.'
+        )
     );
+    println!("---");
+
+    let mut space = HashMap::with_capacity(asteroids.len());
+    for asteroid in &asteroids {
+        space.insert(asteroid, '#');
+    }
+    space.insert(winner, 'X');
+    for index in 9..18 {
+        space.insert(
+            &order[index],
+            (index - 8).to_string().chars().next().unwrap(),
+        );
+    }
+    println!(
+        "{}",
+        render(
+            space.iter().map(|(k, &v)| ((k.x as i64, k.y as i64), v)),
+            '.'
+        )
+    );
+
+    //    let two_hundredth = &order[199];
+    //    println!(
+    //        "{} ({:?})",
+    //        (two_hundredth.x * 100) + two_hundredth.y,
+    //        two_hundredth
+    //    );
 }
 
-const _INPUT: &str = ".#....#####...#..
+const EXAMPLE_INPUT: &str = ".#....#####...#..
 ##...##.#####..##
 ##...#...#.#####.
 ..#.....#...###..
 ..#.#.....#....##";
 
-const INPUT: &str = "....#...####.#.#...........#........
+const FULL_INPUT: &str = "....#...####.#.#...........#........
 #####..#.#.#......#####...#.#...#...
 ##.##..#.#.#.....#.....##.#.#..#....
 ...#..#...#.##........#..#.......#.#

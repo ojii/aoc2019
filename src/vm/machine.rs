@@ -1,5 +1,5 @@
 use crate::vm::instructions::*;
-use crate::vm::io::{Input, Output};
+use crate::vm::io::IO;
 use std::ops::{Index, IndexMut};
 
 #[derive(Clone, Debug)]
@@ -46,11 +46,11 @@ enum StepResult {
     Halt,
 }
 
-pub fn run<I: Input, O: Output>(mut memory: Memory, mut input: I, mut output: O) -> (Memory, O) {
+pub fn run<I: IO>(mut memory: Memory, mut io: I) -> (Memory, I::Value) {
     let mut pc = 0;
     let mut rb = 0;
     'main: loop {
-        match step(pc, rb, &mut memory, &mut input, &mut output) {
+        match step(pc, rb, &mut memory, &mut io) {
             StepResult::Continue(at, new_rb) => {
                 pc = at;
                 rb = new_rb;
@@ -58,16 +58,10 @@ pub fn run<I: Input, O: Output>(mut memory: Memory, mut input: I, mut output: O)
             StepResult::Halt => break 'main,
         }
     }
-    (memory, output)
+    (memory, io.output())
 }
 
-fn step<I: Input, O: Output>(
-    pc: usize,
-    rb: usize,
-    memory: &mut Memory,
-    input: &mut I,
-    output: &mut O,
-) -> StepResult {
+fn step<I: IO>(pc: usize, rb: usize, memory: &mut Memory, io: &mut I) -> StepResult {
     let opcode = memory[pc];
     let instruction = get_instruction(opcode);
     let mut params: Parameters = Vec::with_capacity(instruction.num_params);
@@ -99,11 +93,11 @@ fn step<I: Input, O: Output>(
             StepResult::Continue(pc, rb)
         }
         InstructionAction::Read(position) => {
-            memory[position] = input.read().unwrap();
+            memory[position] = io.read().unwrap();
             StepResult::Continue(pc, rb)
         }
         InstructionAction::Write(value) => {
-            output.write(value).unwrap();
+            io.write(value).unwrap();
             StepResult::Continue(pc, rb)
         }
         InstructionAction::Jump(to) => StepResult::Continue(to, rb),

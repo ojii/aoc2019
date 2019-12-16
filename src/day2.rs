@@ -1,6 +1,6 @@
 use rayon::prelude::*;
 
-use crate::vm::{run, Memory, NullIO};
+use crate::vm::{run, InputOutput, Memory, NullIO};
 
 pub fn main() {
     let memory = Memory::from(INPUT);
@@ -8,7 +8,7 @@ pub fn main() {
     let mut first = memory.clone();
     first[1] = 12;
     first[2] = 2;
-    let (first, _) = run(first, NullIO::new(), NullIO::new());
+    let (first, _) = run(first, InputOutput::new(NullIO::new(), NullIO::new()));
     println!("{}", first[0]);
 
     let value = iproduct!(0..=99, 0..=99)
@@ -18,7 +18,7 @@ pub fn main() {
             let mut program = memory.clone();
             program[1] = *noun;
             program[2] = *verb;
-            let (memory, _) = run(program, NullIO::new(), NullIO::new());
+            let (memory, _) = run(program, InputOutput::new(NullIO::new(), NullIO::new()));
             (*noun, *verb, memory[0])
         })
         .find_any(|(_, _, zero)| *zero == 19_690_720)

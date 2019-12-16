@@ -1,5 +1,5 @@
 use crate::render::render;
-use crate::vm::{run, Memory};
+use crate::vm::{run, InputOutput, Memory};
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -148,7 +148,7 @@ fn paint(color: Color) -> Hull {
         robot.hull
     });
     thread::spawn(|| {
-        run(memory, camera_recv, driver_send);
+        run(memory, InputOutput::new(camera_recv, driver_send));
     })
     .join()
     .unwrap();

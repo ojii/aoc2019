@@ -1,13 +1,19 @@
-use crate::vm::{run, Memory};
+use crate::vm::{run, InputOutput, Memory};
 
 pub fn main() {
     println!(
         "{}",
-        run(Memory::from(INPUT), 1, Vec::new()).1.last().unwrap()
+        run(Memory::from(INPUT), InputOutput::new(1, Vec::new()))
+            .1
+            .last()
+            .unwrap()
     );
     println!(
         "{}",
-        run(Memory::from(INPUT), 2, Vec::new()).1.last().unwrap()
+        run(Memory::from(INPUT), InputOutput::new(2, Vec::new()))
+            .1
+            .last()
+            .unwrap()
     );
 }
 
