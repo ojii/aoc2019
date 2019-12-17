@@ -49,7 +49,9 @@ enum StepResult {
 pub fn run<I: IO>(mut memory: Memory, mut io: I) -> (Memory, I::Value) {
     let mut pc = 0;
     let mut rb = 0;
+    let mut counter = 0;
     'main: loop {
+        counter += 1;
         match step(pc, rb, &mut memory, &mut io) {
             StepResult::Continue(at, new_rb) => {
                 pc = at;
@@ -92,14 +94,17 @@ fn step<I: IO>(pc: usize, rb: usize, memory: &mut Memory, io: &mut I) -> StepRes
             memory[position] = value;
             StepResult::Continue(pc, rb)
         }
-        InstructionAction::Read(position) => {
-            memory[position] = io.read().unwrap();
-            StepResult::Continue(pc, rb)
-        }
-        InstructionAction::Write(value) => {
-            io.write(value).unwrap();
-            StepResult::Continue(pc, rb)
-        }
+        InstructionAction::Read(position) => match io.read() {
+            Some(value) => {
+                memory[position] = value;
+                StepResult::Continue(pc, rb)
+            }
+            None => StepResult::Halt,
+        },
+        InstructionAction::Write(value) => match io.write(value) {
+            Some(_) => StepResult::Continue(pc, rb),
+            None => StepResult::Halt,
+        },
         InstructionAction::Jump(to) => StepResult::Continue(to, rb),
         InstructionAction::Noop => StepResult::Continue(pc, rb),
         InstructionAction::ChangeRelativeBase(by) => {

@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 use std::sync::mpsc::{Receiver, Sender};
 
-pub type IOResult<T> = Result<T, String>;
+pub type IOResult<T> = Option<T>;
 
 pub trait IO {
     type Value;
@@ -24,11 +24,11 @@ impl<I: Input, O: Output> InputOutput<I, O> {
 impl<I: Input, O: Output> IO for InputOutput<I, O> {
     type Value = O::Value;
 
-    fn read(&mut self) -> Result<i64, String> {
+    fn read(&mut self) -> IOResult<i64> {
         self.input.read()
     }
 
-    fn write(&mut self, value: i64) -> Result<(), String> {
+    fn write(&mut self, value: i64) -> IOResult<()> {
         self.output.write(value)
     }
 
@@ -49,7 +49,7 @@ pub trait Output {
 
 impl Input for i64 {
     fn read(&mut self) -> IOResult<i64> {
-        Ok(*self)
+        Some(*self)
     }
 }
 
@@ -57,7 +57,7 @@ impl Output for i64 {
     type Value = i64;
     fn write(&mut self, value: i64) -> IOResult<()> {
         *self = value;
-        Ok(())
+        Some(())
     }
 
     fn output(self) -> i64 {
@@ -68,8 +68,6 @@ impl Output for i64 {
 impl Input for VecDeque<i64> {
     fn read(&mut self) -> IOResult<i64> {
         self.pop_front()
-            .map(Ok)
-            .unwrap_or_else(|| Err("Input empty".to_string()))
     }
 }
 
@@ -78,7 +76,7 @@ impl Output for Vec<i64> {
 
     fn write(&mut self, value: i64) -> IOResult<()> {
         self.push(value);
-        Ok(())
+        Some(())
     }
 
     fn output(self) -> Vec<i64> {
@@ -97,14 +95,16 @@ impl NullIO {
 
 impl Input for NullIO {
     fn read(&mut self) -> IOResult<i64> {
-        Err("Cannot read from null io".to_string())
+        println!("Cannot read from null io");
+        None
     }
 }
 
 impl Output for NullIO {
     type Value = ();
     fn write(&mut self, _value: i64) -> IOResult<()> {
-        Err("Cannot write to null io".to_string())
+        println!("Cannot write to null io");
+        None
     }
 
     fn output(self) {}
@@ -112,15 +112,14 @@ impl Output for NullIO {
 
 impl Input for Receiver<i64> {
     fn read(&mut self) -> IOResult<i64> {
-        self.recv().map(Ok).unwrap_or_else(|e| Err(e.to_string()))
+        self.recv().ok()
     }
 }
 
 impl Output for Sender<i64> {
     type Value = ();
     fn write(&mut self, value: i64) -> IOResult<()> {
-        self.send(value).unwrap();
-        Ok(())
+        self.send(value).ok()
     }
 
     fn output(self) {}
@@ -143,11 +142,11 @@ impl SendOrStore {
 impl Output for SendOrStore {
     type Value = Vec<i64>;
 
-    fn write(&mut self, value: i64) -> Result<(), String> {
+    fn write(&mut self, value: i64) -> IOResult<()> {
         if self.sender.send(value).is_err() {
             self.store.push(value);
         };
-        Ok(())
+        Some(())
     }
 
     fn output(self) -> Vec<i64> {

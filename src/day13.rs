@@ -1,4 +1,4 @@
-use crate::vm::{run, InputOutput, Memory, NullIO, IO};
+use crate::vm::{run, IOResult, InputOutput, Memory, NullIO, IO};
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::convert::TryFrom;
@@ -76,7 +76,7 @@ impl AI {
 
 impl IO for AI {
     type Value = i64;
-    fn read(&mut self) -> Result<i64, String> {
+    fn read(&mut self) -> IOResult<i64> {
         self.consume_buffer();
         let ballx = self
             .screen
@@ -94,15 +94,15 @@ impl IO for AI {
                 _ => None,
             })
             .unwrap();
-        Ok(match ballx.cmp(&paddlex) {
+        Some(match ballx.cmp(&paddlex) {
             Ordering::Greater => JOYSTICK_RIGHT,
             Ordering::Less => JOYSTICK_LEFT,
             Ordering::Equal => JOYSTICK_NEUTRAL,
         })
     }
-    fn write(&mut self, value: i64) -> Result<(), String> {
+    fn write(&mut self, value: i64) -> IOResult<()> {
         self.buffer.push(value);
-        Ok(())
+        Some(())
     }
 
     fn output(mut self) -> i64 {
