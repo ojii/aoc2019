@@ -56,7 +56,6 @@ pub fn main() {
         .count();
     println!("{}", affected);
     let (x, y) = search();
-    println!("{}/{}", x, y);
     println!("{}", (x * 10_000) + y);
 }
 
