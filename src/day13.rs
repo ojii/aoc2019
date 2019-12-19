@@ -1,3 +1,4 @@
+use crate::render::render;
 use crate::vm::{run, IOResult, InputOutput, Memory, NullIO, IO};
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -78,6 +79,13 @@ impl IO for AI {
     type Value = i64;
     fn read(&mut self) -> IOResult<i64> {
         self.consume_buffer();
+        println!(
+            "{}",
+            render(
+                self.screen.iter().map(|(c, t)| ((c.0, c.1), t.render())),
+                ' '
+            )
+        );
         let ballx = self
             .screen
             .iter()

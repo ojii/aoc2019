@@ -16,6 +16,8 @@ mod day14;
 mod day15;
 mod day16;
 mod day17;
+mod day18;
+mod day19;
 mod day2;
 mod day3;
 mod day4;
@@ -25,9 +27,10 @@ mod day7;
 mod day8;
 mod day9;
 pub mod render;
+pub mod twod;
 pub mod vm;
 
-const DAYS: [fn(); 17] = [
+const DAYS: [fn(); 19] = [
     day1::main,
     day2::main,
     day3::main,
@@ -45,6 +48,8 @@ const DAYS: [fn(); 17] = [
     day15::main,
     day16::main,
     day17::main,
+    day18::main,
+    day19::main,
 ];
 
 fn main() {

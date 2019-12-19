@@ -1,114 +1,110 @@
-use itertools::Itertools;
-use std::collections::{HashMap, HashSet};
-use std::convert::TryFrom;
-use std::fmt::{Display, Error, Formatter};
+use std::collections::HashMap;
+use std::iter::FromIterator;
 
-#[derive(Debug)]
-struct Material {
-    name: String,
-    amount: i64,
+type Chemicals = HashMap<String, Material>;
+
+struct System {
+    cost: usize,
+    pool: HashMap<String, usize>,
+    chemicals: Chemicals,
 }
 
-impl Display for Material {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
-        write!(f, "{} {}", self.amount, self.name)
+impl System {
+    fn new(chemicals: Chemicals) -> System {
+        System {
+            cost: 0,
+            pool: HashMap::new(),
+            chemicals,
+        }
     }
 }
 
-#[derive(Debug)]
-struct Reaction {
-    inputs: Vec<Material>,
-    name: String,
-    amount: i64,
-}
-
-impl Display for Reaction {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
-        write!(
-            f,
-            "{} => {} {}",
-            self.inputs
-                .iter()
-                .map(|material| material.to_string())
-                .join(", "),
-            self.amount,
-            self.name
-        )
+impl System {
+    fn take(&mut self, amount: usize, name: String) {
+        let mut have = *self.pool.get(&name).unwrap_or(&0);
+        let reactive = self.chemicals.get(&name).unwrap().clone();
+        while have < amount {
+            have += reactive.produce(self);
+        }
+        self.pool.insert(name, have - amount);
     }
 }
 
-fn parse(line: &str) -> (String, Reaction) {
+#[derive(Clone)]
+enum Material {
+    Ore,
+    Chemical {
+        name: String,
+        inputs: Vec<(String, usize)>,
+        output: usize,
+    },
+}
+
+impl Material {
+    fn produce(&self, system: &mut System) -> usize {
+        match self {
+            Material::Ore => {
+                system.cost += 1;
+                1
+            }
+            Material::Chemical {
+                name,
+                inputs,
+                output,
+            } => {
+                for (name, amount) in inputs {
+                    system.take(*amount, name.clone())
+                }
+                *output
+            }
+        }
+    }
+}
+
+fn parse(line: &str) -> (String, Material) {
     let parts: Vec<&str> = line.split("=>").map(|p| p.trim()).collect();
     let lhs = parts[0];
     let rhs: Vec<&str> = parts[1].split(' ').collect();
-    let amount = rhs[0].parse::<i64>().unwrap();
+    let output = rhs[0].parse::<usize>().unwrap();
+    let name = rhs[1].to_string();
+    let inputs = lhs
+        .split(',')
+        .map(|p| p.trim())
+        .map(|p| p.split(' ').collect::<Vec<&str>>())
+        .map(|v| (v[1].to_string(), v[0].parse::<usize>().unwrap()))
+        .collect();
     (
-        rhs[1].to_string(),
-        Reaction {
-            inputs: lhs
-                .split(',')
-                .map(|p| p.trim())
-                .map(|p| p.split(' ').collect::<Vec<&str>>())
-                .map(|v| Material {
-                    name: v[1].to_string(),
-                    amount: v[0].parse::<i64>().unwrap(),
-                })
-                .collect(),
-            name: rhs[1].to_string(),
-            amount,
+        name.clone(),
+        Material::Chemical {
+            name,
+            inputs,
+            output,
         },
     )
 }
 
-type Reactions = HashMap<String, Reaction>;
-
-fn calculate(name: &String, amount: i64, reactions: &Reactions) -> i64 {
-    let reaction = reactions.get(name).unwrap();
-    let iterations = (amount as f64 / reaction.amount as f64).ceil() as i64;
-    println!(
-        "To get {} of {} we need to run reaction '{}' {} times",
-        amount, name, reaction, iterations,
-    );
-    let mut cost = 0;
-    for input in &reaction.inputs {
-        if &input.name == "ORE" {
-            cost += input.amount;
-        } else {
-            cost += calculate(&input.name, input.amount * iterations, &reactions);
-        }
-    }
-    cost * iterations
-}
-
-fn build() {}
-
 pub fn main() {
-    let mut producers: Reactions = EXAMPLE_INPUT.lines().map(parse).collect();
-
-    let mut costs: HashMap<String, i32> = HashMap::new();
-    costs.insert("ORE".to_string(), 1);
-
-    //    while producers.len() {
-    //        for producer in producers.values() {
-    //            if producer
-    //                .inputs
-    //                .iter()
-    //                .all(|material| costs.contains_key(&material.name))
-    //            {}
-    //        }
+    let mut chemicals = HashMap::from_iter(INPUT.lines().map(parse));
+    chemicals.insert("ORE".to_string(), Material::Ore);
+    let mut system = System::new(chemicals);
+    system
+        .chemicals
+        .get(&"FUEL".to_string())
+        .unwrap()
+        .clone()
+        .produce(&mut system);
+    println!("{}", system.cost);
+    //    let mut chemicals = HashMap::from_iter(INPUT.lines().map(parse));
+    //    chemicals.insert("ORE".to_string(), Material::Ore);
+    //    let mut system = System::new(chemicals);
+    //    let fuel = system.chemicals.get(&"FUEL".to_string()).unwrap().clone();
+    //    let mut produced = -1;
+    //    while system.cost < 1000_000_000_000 {
+    //        fuel.produce(&mut system);
+    //        produced += 1;
     //    }
-    //
-    //    let cost = calculate(&"FUEL".to_string(), 1, &producers);
-    //    println!("{}", cost);
+    //    println!("{}", produced);
 }
-
-const EXAMPLE_INPUT: &str = "9 ORE => 2 A
-8 ORE => 3 B
-7 ORE => 5 C
-3 A, 4 B => 1 AB
-5 B, 7 C => 1 BC
-4 C, 1 A => 1 CA
-2 AB, 3 BC, 4 CA => 1 FUEL";
 
 const INPUT: &str = "2 MLVWS, 8 LJNWK => 1 TNFQ
 1 BWXQJ => 2 BMWK
