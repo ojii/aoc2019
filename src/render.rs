@@ -1,8 +1,12 @@
 use itertools::Itertools;
 use std::collections::HashMap;
+use std::fmt::Display;
 
-pub fn render<I: Iterator<Item = ((i64, i64), char)>>(data: I, background: char) -> String {
-    let coords: HashMap<(i64, i64), char> = data.collect();
+pub fn render<B, I: Iterator<Item = ((i64, i64), B)>>(data: I, background: B) -> String
+where
+    B: Display,
+{
+    let coords: HashMap<(i64, i64), B> = data.collect();
     let (min_x, max_x) = coords
         .keys()
         .map(|&(x, _)| x)
