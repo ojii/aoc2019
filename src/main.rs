@@ -1,5 +1,6 @@
 #![feature(drain_filter)]
 #![feature(tau_constant)]
+#![feature(deadline_api)]
 
 #[macro_use]
 extern crate itertools;
@@ -20,6 +21,9 @@ mod day18;
 mod day19;
 mod day2;
 mod day20;
+mod day21;
+mod day22;
+mod day23;
 mod day3;
 mod day4;
 mod day5;
@@ -31,7 +35,7 @@ pub mod render;
 pub mod twod;
 pub mod vm;
 
-const DAYS: [fn(); 20] = [
+const DAYS: [fn(); 23] = [
     day1::main,
     day2::main,
     day3::main,
@@ -52,6 +56,9 @@ const DAYS: [fn(); 20] = [
     day18::main,
     day19::main,
     day20::main,
+    day21::main,
+    day22::main,
+    day23::main,
 ];
 
 fn main() {
