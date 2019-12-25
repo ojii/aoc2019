@@ -1,4 +1,5 @@
 use std::collections::VecDeque;
+use std::io::{Read, Stdin, Stdout, Write};
 use std::sync::mpsc::{Receiver, Sender};
 
 pub type IOResult<T> = Option<T>;
@@ -151,5 +152,26 @@ impl Output for SendOrStore {
 
     fn output(self) -> Vec<i64> {
         self.store
+    }
+}
+
+impl Input for Stdin {
+    fn read(&mut self) -> Option<i64> {
+        let mut locked = self.lock();
+        let mut buffer = [0u8; 1];
+        locked.read_exact(&mut buffer).unwrap();
+        Some(buffer[0] as i64)
+    }
+}
+
+impl Output for Stdout {
+    type Value = ();
+
+    fn write(&mut self, value: i64) -> Option<()> {
+        self.lock().write_all(&[value as u8]).ok()
+    }
+
+    fn output(self) -> Self::Value {
+        ()
     }
 }
